@@ -2,6 +2,8 @@
 ## Objective
 This is example of the Amazon Batch Service to deploy an example batch workflow. This example is meant to be a deployable artifact POC. This example will use CloudFormation, AWS Lambda, Docker, AWS Batch, and an S3 bucket trigger. 
 
+The batch workflow created in this example is not a prescription for how batch processing should be done but mearly an example. In this example all of the jobs for the workflow are scheduled at once. In doing so your scheduler could pass environment variables or change the command of each job to instruct the jobs where to store data, and where to expect data. Another approach would be to, have processing jobs schedule their dependant jobs, instructing those dependant jobs where to find the data that they produced. There are many ways batch processing can be utilized, this is simply an example. 
+
 ### Why I Think Batch is Cool
 * AWS Batch can manage the infrastructure for you, scaling up or down based on the number of jobs in queue. 
 * AWS Batch is able to scale virtically as well, when your Compute Environment Instance Type is set to "optimal".
