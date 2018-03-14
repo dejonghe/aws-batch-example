@@ -48,8 +48,6 @@ https://github.com/dejonghe/aws-batch-example
 To prepare
 You must run a script from within the Github project. This script is to be ran from the base of the repository. If you rename the repository direcotry you will need to edit the [script](./scripts/env_prep.sh), all the variables are at the top. 
 
-[env_prep.sh](./scripts/env_prep.sh), this script will utilize pip to install the required packages for the lambda to the local directory, zip up the lambda function with all of the dependencies and place it in a new directory ./builds/.
-
 This script performs the following tasks:
 1. Builds and and uploads the lambda code
   * The script creates a temp directory
@@ -71,7 +69,7 @@ This script performs the following tasks:
   * The images are tagged to match the repository created previously. {accountId}.dkr.ecr.{region}.amazonaws.com/{repoName}:latest
   * Images are pushed to ECR.
 
-The following is an example of running the script. !Note! You can pass -p profile, and -r release (Your aws-cli profile's default regions is used)
+The following is an example of running the script. **Note:** You can pass -p profile, and -r release (Your aws-cli profile's default regions is used)
 ```
 ./scripts/env_prep.sh -b aws_batch_example_{yourName} (-p optionalProfile -r optionalRelease)
 ```
