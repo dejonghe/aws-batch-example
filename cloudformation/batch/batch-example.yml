@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates a POC AWS Batch environment, includes IAM resources, S3, Lambda, and Batch.
+Parameters:
+  Release:
+    Type: String
+    Description: 'Release Identifier'
+    Default: 'develop'
+  CloudToolsBucket:
+    Type: String
+    Description: 'S3 Bucket where CFN and Lambda archives are stored.'
+  Environment:
+    Type: String
+    Description: 'Environment Name'
+    Default: Dev
+  QueueName:
+    Type: String
+    Description: 'Name of Queue to be created'
+    Default: MyQueue
+  VPCCidr:
+    Type: String
+    Description: 'Cidr Block of the VPC, allows for ssh access internally.'
+    Default: '10.0.0.0/8'
+    MinLength: "9"
+    MaxLength: "18"
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: "Must be valid CIDR notation (i.e. x.x.x.x/x)."
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: 'VPC ID to boot compute into'
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: 'List of Subnets to boot into'
+  AMI:
+    Type: AWS::EC2::Image::Id
+    Description: 'AMI to use for Compute Environment'
+    Default: ami-cad827b7
+  Ec2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: 'Ec2KeyPair to use for Compute Environment'
+  StartImageName:
+    Type: String
+    Description: 'Name and tag of Start Container Image'
+    Default: 'batchpocstart:latest'
+  ProcessImageName:
+    Type: String
+    Description: 'Name and tag of Process Container Image'
+    Default: 'batchpocprocess:latest'
+
+Resources:
+  LambdaTriggerIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - 
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - 
+          PolicyName: 'LambdaBasic'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !Join [ ':', [ 'arn:aws:logs', !Ref 'AWS::Region', !Ref 'AWS::AccountId', 'log-group:*:*' ] ]
+        - 
+          PolicyName: 'SubmitBatch'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: 'Allow'
+                Action:
+                  - 'batch:SubmitJob'
+                Resource: '*'
+  BatchContainerIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - 
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'ecs-tasks.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - 
+          PolicyName: 'SubmitBatch'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: 'Allow'
+                Action:
+                  - 'batch:SubmitJob'
+                Resource: '*'
+  BatchServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - 
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'batch.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole'
+  BatchInstanceIAMRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - 
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'ec2.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - 
+          PolicyName: 'ECS'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: 'Allow'
+                Action:
+                  - 'ecs:*'
+                  - 'ecr:*'
+                  - 'logs:*'
+                Resource: '*'
+        - 
+          PolicyName: 'Batch'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - 
+                Effect: 'Allow'
+                Action:
+                  - 'batch:*'
+                Resource: '*'
+  BatchInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Path: /
+      Roles:
+        - !Ref BatchInstanceIAMRole
+      InstanceProfileName: !Join [ "", [ "BatchIAM", !Ref Environment ] ]
+  TriggerFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: !Ref CloudToolsBucket
+        S3Key: !Join [ "/", [ !Ref Release, "lambda/trigger.zip" ] ]
+      Description: "Triggers AWS Batch when invoked"
+      Environment: 
+        Variables:
+          JobQueue: !Ref QueueName
+          JobDefinition: Start
+      FunctionName: !Join ["",["BatchTrigger",!Ref Environment]]
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt [ LambdaTriggerIAMRole, Arn ]
+      Runtime: python3.6
+      Timeout: 60
+  S3LambdaEvent:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt [ TriggerFunction, Arn ]
+      SourceArn: !Join [ '', [ 'arn:aws:s3:::', "batch-poc-", !Ref 'AWS::AccountId','-', !Ref 'AWS::Region']]
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+  TriggeredBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties: 
+      BucketName: !Join [ "-", [ "batch-poc", !Ref 'AWS::AccountId', !Ref 'AWS::Region' ] ]
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt [ TriggerFunction, Arn ]
+    DependsOn: S3LambdaEvent
+  BatchSecGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties: 
+      GroupDescription: BatchGroup
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: '-1'
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCidr
+          IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+      VpcId: !Ref VPC
+  BatchCompute:
+    Type: "AWS::Batch::ComputeEnvironment"
+    Properties:
+      Type: Managed
+      ServiceRole: !Ref BatchServiceRole
+      ComputeEnvironmentName: !Join [ "", ["BatchPOC-", !Ref Environment]]
+      ComputeResources: 
+        MaxvCpus: 24
+        SecurityGroupIds: 
+          - !Ref BatchSecGroup
+        Subnets: 
+          - !Select [ '0', !Ref Subnets ]
+          - !Select [ '1', !Ref Subnets ]
+        Type: Ec2
+        MinvCpus: 0
+        ImageId: !Ref AMI
+        InstanceRole: !Ref BatchInstanceProfile
+        InstanceTypes: 
+          - optimal
+        Ec2KeyPair: !Ref Ec2KeyPair
+        Tags: { "Name": "Batch POC" }
+        DesiredvCpus: 0
+      State: ENABLED
+  Queue:
+    Type: "AWS::Batch::JobQueue"
+    Properties:
+      ComputeEnvironmentOrder: 
+        - ComputeEnvironment: !Join [ "", ["BatchPOC-", !Ref Environment]]
+          Order: 1
+      Priority: 1
+      State: "ENABLED"
+      JobQueueName: !Ref QueueName
+    DependsOn: BatchCompute
+  StartJob:
+    Type: "AWS::Batch::JobDefinition"
+    Properties:
+      Type: Container
+      ContainerProperties: 
+        Command: 
+          - schedule
+          - -r
+          - !Ref 'AWS::Region'
+          - -q 
+          - !Ref QueueName
+          - -j
+          - Process
+        Memory: 128
+        JobRoleArn: !Ref BatchContainerIAMRole
+        Vcpus: 1
+        Image: !Join ['', [!Ref 'AWS::AccountId','.dkr.ecr.', !Ref 'AWS::Region', '.amazonaws.com/', !Ref StartImageName ] ]
+      JobDefinitionName: Start
+      RetryStrategy: 
+        Attempts: 1
+  ProcessJob:
+    Type: "AWS::Batch::JobDefinition"
+    Properties:
+      Type: Container
+      ContainerProperties: 
+        Command: 
+          - echo
+          - "hello world"
+        Memory: 128
+        JobRoleArn: !Ref BatchContainerIAMRole
+        Vcpus: 1
+        Image: !Join ['', [!Ref 'AWS::AccountId','.dkr.ecr.', !Ref 'AWS::Region', '.amazonaws.com/', !Ref ProcessImageName ] ]
+      JobDefinitionName: Process
+      RetryStrategy: 
+        Attempts: 4
