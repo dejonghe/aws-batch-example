@@ -5,12 +5,9 @@ This python module and CLI entry point sumbit 5 jobs to AWS Batch in a defined w
 ## Workflow
 The workflow creates 5 jobs demonstrating a fan out, fan in workflow. All of the jobs run the same job definition, because after all, this is just a poc. 
 
-### Job Dependancies
-         __       __
-        /   Job2a   \
-  Job1 ---- Job2b ---- Job3 
-        \__ Job2c __/
+![WorkFlow Diagram](./Batch-POC-Workflow.png)
 
+### Job Dependancies
 1. Job1 depends on no other jobs.
 2. Job2a depends on Job1
 3. Job2b depends on Job1

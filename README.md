@@ -20,6 +20,10 @@ This is example of the Amazon Batch Service to deploy an example batch workflow.
 **Note:** You are responsible for the costs incurred by running this example. The example is limited to a total of 24 CPU's at a given time unless altered, and defaults to 0 running instances when no jobs are in queue.
 ---------------------
 
+## Diagram
+
+![Diagram](./Batch-POC-Diagram.png)
+
 ## Preparation and Demonstration
 Before you jump head first into AWS Batch you need code for batch to run. AWS batch is able to run docker container tasks, and AWS Lambda Functions. This example will use docker container tasks, and a Lambda function to submit a job when an object is created or modified in a S3 bucket. This repository consists of everything you will need to build the proof of concept. There is a prep script that will build the Lambda code into a zip package and upload it to a S3 Bucket. This script will then validate you have ECR repositories available to host the docker container images that are used, fetch credentials for the ECR repositories, then build and push the images. After this you will deploy the CloudFormation to produce the AWS Batch POC. This documentation will walk you through running all of the commands and explain what they do.
 
