@@ -18,10 +18,13 @@ The batch workflow created in this example is not a prescription for how batch p
 * Jobs can have dependencies
 * You can run an array of the same job, making monte carlo simulations a breeze. 
 
---------------------
+---
+
 **Note: You are responsible for the costs incurred by running this example.**
+
 The example is limited to a total of 24 CPU's at a given time unless altered, and defaults to 0 running instances when no jobs are in queue.
----------------------
+
+---
 
 ## Diagram
 
