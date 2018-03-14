@@ -52,24 +52,24 @@ You must run a script from within the Github project. This script is to be ran f
 
 This script performs the following tasks:
 1. Builds and and uploads the lambda code
-..*The script creates a temp directory
-..*Copies the code from [lambda trigger](./lambda/trigger/) to the temp directory
-..*Uses pip to install the requirements to the temp directory
-..*Zips up the contents of the temp directory to a package named ./lambda/trigger.zip
-..*Removes the temp directory 
-..*Uploads the zip to `s3://{yourBucket}/{release(develop)}/lambda/trigger.zip`
+  * The script creates a temp directory
+  * Copies the code from [lambda trigger](./lambda/trigger/) to the temp directory
+  * Uses pip to install the requirements to the temp directory
+  * Zips up the contents of the temp directory to a package named ./lambda/trigger.zip
+  * Removes the temp directory 
+  * Uploads the zip to `s3://{yourBucket}/{release(develop)}/lambda/trigger.zip`
 2. Creates and or Validates ECR Repositories
-..*The script will validate you have two ECR Repositories: ['batchpocstart','batchpocprocess']
-..*If either of the repositories are missing it will create them.
+  * The script will validate you have two ECR Repositories: ['batchpocstart','batchpocprocess']
+  * If either of the repositories are missing it will create them.
 3. Get docker login credentials for the repositories
-..*The script uses `aws ecr get-login` piped to `bash`
+  * The script uses `aws ecr get-login` piped to `bash`
 4. Docker images are built and pushed
-..*The script moves into the directory containing the Dockerfiles
-..*[batchpocstart](./docker/batchpocstart/): Has a small python application that schedules jobs that depend on each other.
-..*[batchpocprocess](./docker/batchpocprocess/): Is just a busybox container that runs `echo "hello world"` to emulate work.
-..*Once in the given directory the script will use the docker command line tool to build the image.
-..*The images are tagged to match the repository created previously. {accountId}.dkr.ecr.{region}.amazonaws.com/{repoName}:latest
-..*Images are pushed to ECR.
+  * The script moves into the directory containing the Dockerfiles
+  * [batchpocstart](./docker/batchpocstart/): Has a small python application that schedules jobs that depend on each other.
+  * [batchpocprocess](./docker/batchpocprocess/): Is just a busybox container that runs `echo "hello world"` to emulate work.
+  * Once in the given directory the script will use the docker command line tool to build the image.
+  * The images are tagged to match the repository created previously. {accountId}.dkr.ecr.{region}.amazonaws.com/{repoName}:latest
+  * Images are pushed to ECR.
 
 The following is an example of running the script. !Note! You can pass -p profile, and -r release (Your aws-cli profile's default regions is used)
 ```
@@ -102,18 +102,18 @@ From the Batch Dashboard you should see the Queue, and Compute Environment. You 
 3. Once the job is runnable there will need to be a instance in the Compute Environment to run the job. 
 4. Note that the current Desired vCPUs for your Compute Environment is initially 0. This means you have 0 instance in your Compute Environment.
 5. As the job becomes runnable Batch will start to launch an EC2 instance for the job to run on. This can take a few minutes. 
-..* To keep a Batch Compute Environment warm so you do not have to wait, up the Minimum vCPUs. 
+  * To keep a Batch Compute Environment warm so you do not have to wait, up the Minimum vCPUs. 
 6. Once your Compute Environment is online you will see your job move to starting. 
-..* This can take a few moments for the first run because the instance needs to pull down the container image.
+  * This can take a few moments for the first run because the instance needs to pull down the container image.
 7. Your Job will then move to running for a brief second, and then to Success or Failed. 
 8. Whether you job is a Success or Failure, if you click into the link you will be taken to the Jobs Dashboard for that Status.
 9. Click the JobId. You will see detail appear on the right hand side. 
 10. In the detail you will see link to view logs. Click on it to explore. 
 11. If the first job was successful, 5 other jobs will be submitted and move through the different status's. 
-..* Note that when the group of 5 is submitted some stay in pending, and do not immediately go to runnable. This is because those jobs have dependencies.
+  * Note that when the group of 5 is submitted some stay in pending, and do not immediately go to runnable. This is because those jobs have dependencies.
 12. Now submit a job manually through the Jobs Dashboard. 
-..* Play with running jobs different ways.
-..* Try submitting an Array.
+  * Play with running jobs different ways.
+  * Try submitting an Array.
 13. Find other ways to trigger batch jobs:
-..* The lambda function allows you to integrate with anything that can invoke lambda or sns, though you'll have to edit the permissions.
-..* Check out the CloudWatch Events trigger for AWS Batch, to trigger based on CloudWatch Event rules/patterns or a time schedule.
+  * The lambda function allows you to integrate with anything that can invoke lambda or sns, though you'll have to edit the permissions.
+  * Check out the CloudWatch Events trigger for AWS Batch, to trigger based on CloudWatch Event rules/patterns or a time schedule.
