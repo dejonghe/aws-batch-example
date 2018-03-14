@@ -18,8 +18,8 @@ ProcessImageName|Name and tag of Process Container Image|String|*no default*
 
 
 ## Resources
-Resource|Type|Link
-----|----|----
+Resource|Type
+----|----
 LambdaTriggerIAMRole|AWS::IAM::Role
 BatchContainerIAMRole|AWS::IAM::Role
 BatchServiceRole|AWS::IAM::Role
