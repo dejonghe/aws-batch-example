@@ -3,12 +3,12 @@ set -e
 # Set variables
 logfile=prep.log
 base_home_dir=aws-batch-example
-lambda_code_path=./lambda
+lambda_code_path=lambda
 lambda_func_name=trigger
 lambda_pkg_name=${lambda_func_name}.zip
 temp_path=${lambda_code_path}/.temp
 
-docker_path=./docker
+docker_path=docker
 start_repo_name=batchpocstart
 start_docker_path=${docker_path}/${start_repo_name}
 proc_repo_name=batchpocprocess
@@ -42,7 +42,7 @@ function build_lambda()
   zip -r ../${lambda_pkg_name} ./*
 
   # Move back home
-  numbdirs=$(awk -F"/" '{print NF-1}' <<< "${temp_path}")
+  numbdirs=$(awk -F"/" '{print NF-1}' <<< "./${temp_path}")
   for i in $(seq 1 ${numbdirs}); do cd ../;done
 
   # Remove the temparary build dir
@@ -58,11 +58,16 @@ function setup_ecr()
 {
   # Check to see if image repository exists
   # If the start repo does not exist create it
-  start_repo=$(aws ecr describe-repositories --profile ${PROFILE} --repository-names ${1})
-  if [ $? -ne 0 ]
-  then
-    aws ecr create-repository --profile ${PROFILE} --repository-name ${1}
-  fi
+  repos=$(aws ecr describe-repositories --profile ${PROFILE} --query "repositories[].repositoryName" --output text)
+  [[ $repos =~ (^|[[:space:]])${1}($|[[:space:]]) ]] && echo 'Repo Exists' || aws ecr create-repository --profile ${PROFILE} --repository-name ${1}
+  #for repo in $repos
+  #do
+    #if [ $repo = ${1} ]
+    #then
+      #exit 0
+    #fi
+    #aws ecr create-repository --profile ${PROFILE} --repository-name ${1}
+  #done
 }
 
 # Builds and tags docker containers 
@@ -81,7 +86,7 @@ function build_docker()
   docker push ${3}/${2}:latest
   
   # Move back home
-  numbdirs=$(awk -F"/" '{print NF-1}' <<< "${1}")
+  numbdirs=$(awk -F"/" '{print NF-1}' <<< "./${1}")
   for i in $(seq 1 ${numbdirs}); do cd ../;done
 }
 
@@ -140,5 +145,5 @@ aws ecr get-login --no-include-email --profile ${PROFILE} | bash
 build_docker ${start_docker_path} ${start_repo_name} ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 build_docker ${proc_docker_path} ${proc_repo_name} ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 
-}  &> $logfile
+}  1> $logfile
 echo -e "Successfully finished prep.\n  Lambda built\n  ECR setup\n  Docker containers built and pushed"

@@ -13,7 +13,7 @@ This is example of the Amazon Batch Service to deploy an example batch workflow.
 * Job Definitions can be either docker tasks or Lambda Functions.
 * Job Definitions can have default environments, mount points, volumns, CMD, etc.
 * Job Definition defaults can be overrode on Submission
-* Jobs can have dependancies
+* Jobs can have dependencies
 * You can run an array of the same job, making monte carlo simulations a breeze. 
 
 --------------------
@@ -26,9 +26,9 @@ Before you jump head first into AWS Batch you need code for batch to run. AWS ba
 ### Assumptions:
 * You have an AWS Account.
 * You’re using Bash.
-* You have pip installed
-* You're the AWS CLI installed, preferred version 1.11.108 or greater. [Help](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-* You have configured the CLI, set up AWS IAM access credentials. [Help](https://docs.aws.amazon.com/cli/latest/reference/configure/index.html)
+* You have pip installed. [Help](https://pip.pypa.io/en/stable/installing/)
+* You have the AWS CLI installed, preferred version 1.11.108 or greater. [Help](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+* You have configured the CLI, set up AWS IAM access credentials that have appropreate access. [Help](https://docs.aws.amazon.com/cli/latest/reference/configure/index.html)
 * You have docker installed. [Help](https://docs.docker.com/install/)
 * You have a Ec2 KeyPair in your AWS Account / Default Region [Help](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html)
 * You have a VPC with at least two subnets that have internet access, you can use the default VPC. [Help](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
@@ -81,16 +81,17 @@ This step utilizes the [CloudFormation Template](./cloudformation/batch/batch-ex
 
 
 ```
-aws cloudformation create-stack --template-file cloudformation/batch/batch-example.yml --stack-name batch-example --parameter-overrides CloudToolsBucket=aws_batch_example_{yourName} VPCCidr=10.0.0.0/8 VPC=vpc-xxxxxxxx Subnets=subnet-xxxxxxxx,subnet-xxxxxxxx --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --template-body file://cloudformation/batch/batch-example.yml --stack-name batch-example --parameters '[{"ParameterKey":"CloudToolsBucket","ParameterValue":"aws_batch_example_{yourName}"},{"ParameterKey":"VPCCidr","ParameterValue":"10.0.0.0/16"},{"ParameterKey":"VPC","ParameterValue":"vpc-xxxxxxxx"},{"ParameterKey":"Subnets","ParameterValue":"subnet-xxxxxxxx,subnet-xxxxxxxx"},{"ParameterKey":"Ec2KeyPair","ParameterValue":"{yourKeyPairName}"}]' --capabilities CAPABILITY_NAMED_IAM (--profile optionalProfile)
+
 ```
 
 Wait for the CloudFormation stack to complete and then check in on the Batch Dashboard. 
 
 ### Step 6: Exercise the demo
 #### Upload to S3
-The CloudFormation stack created a S3 bucket. When a object is created or updated in this bucket, a notification triggers the lambda to submit a job to AWS batch. The S3 bucket is named: `batch-poc-{yourAccountId}-{region}`. Upload a file to this bucket and watch a job get submitted to AWS Batch.
+The CloudFormation stack created a S3 bucket. When a object is created or updated in this bucket, a notification triggers the lambda to submit a job to AWS batch. The S3 bucket is named: `batch-poc-{yourAccountId}-{region}`. Upload a file to this bucket through the console or with the following command and watch a job get submitted to AWS Batch.
 ```
-aws s3 cp ./README.md s3://batch-poc-{yourAccountId}-{region}/
+aws s3 cp ./README.md s3://batch-poc-{yourAccountId}-{region}/ (--profile optionalProfile)
 ```
 
 #### Watch the Batch Dashboard
@@ -109,6 +110,7 @@ From the Batch Dashboard you should see the Queue, and Compute Environment. You 
 9. Click the JobId. You will see detail appear on the right hand side. 
 10. In the detail you will see link to view logs. Click on it to explore. 
 11. If the first job was successful, 5 other jobs will be submitted and move through the different status's. 
+..* Note that when the group of 5 is submitted some stay in pending, and do not immediately go to runnable. This is because those jobs have dependencies.
 12. Now submit a job manually through the Jobs Dashboard. 
 ..* Play with running jobs different ways.
 ..* Try submitting an Array.

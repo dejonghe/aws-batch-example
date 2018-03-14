@@ -16,8 +16,8 @@ def main():
     args = parser.parse_args()
 
     # Setup scheduler object and call run
-    scheduler = Schedule(profile=args.profile,region=args.region,queue=args.queue,jobdef=args.job)
-    scheduler.run()
+    scheduler = Schedule(profile=args.profile,region=args.region)
+    scheduler.run(queue=args.queue,jobdef=args.job)
     
 
 if __name__ == '__main__':
