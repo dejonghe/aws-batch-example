@@ -1,22 +1,22 @@
 # AWS Batch Example
 ## Objective
-This is example of the Amazon Batch Service to deploy an example batch workflow. This example is meant to be a deployable artifact POC. This example will use CloudFormation, AWS Lambda, Docker, AWS Batch, and an S3 bucket trigger. 
+This is example of the Amazon Batch Service to deploy an example batch workflow. This example is meant to be a deployable artifact POC. This example will use CloudFormation, AWS Lambda, Docker, AWS Batch, and an S3 bucket trigger.
 
-The batch workflow created in this example is not a prescription for how batch processing should be done but mearly an example. In this example all of the jobs for the workflow are scheduled at once. In doing so your scheduler could pass environment variables or change the command of each job to instruct the jobs where to store data, and where to expect data. Another approach would be to, have processing jobs schedule their dependant jobs, instructing those dependant jobs where to find the data that they produced. There are many ways batch processing can be utilized, this is simply an example. 
+The batch workflow created in this example is not a prescription for how batch processing should be done but merely an example. In this example all of the jobs for the workflow are scheduled at once. In doing so your scheduler could pass environment variables or change the command of each job to instruct the jobs where to store data, and where to expect data. Another approach would be to, have processing jobs schedule their dependent jobs, instructing those dependent jobs where to find the data that they produced. There are many ways batch processing can be utilized, this is simply an example. 
 
 ### Why I Think Batch is Cool
-* AWS Batch can manage the infrastructure for you, scaling up or down based on the number of jobs in queue. 
-* AWS Batch is able to scale virtically as well, when your Compute Environment Instance Type is set to "optimal".
-* AWS Batch can automatically bid on spot instances for you. 
+* AWS Batch can manage the infrastructure for you, scaling up or down based on the number of jobs in queue.
+* AWS Batch is able to scale vertically as well, when your Compute Environment Instance Type is set to "optimal".
+* AWS Batch can automatically bid on spot instances for you.
 * Your Job queues can be worked by multiple Compute Environments.
-  * You can set preferrence for a Spot Instance Compute Environment
+  * You can set preference for a Spot Instance Compute Environment
   * When your first Compute Environment is unavailable or over worked the job can be picked up by the next.
 * Job Queues have priority, which means you can have high priority jobs completed first.
 * Job Definitions can be either docker tasks or Lambda Functions.
-* Job Definitions can have default environments, mount points, volumns, CMD, etc.
+* Job Definitions can have default environments, mount points, volumes, CMD, etc.
 * Job Definition defaults can be overrode on Submission
 * Jobs can have dependencies
-* You can run an array of the same job, making monte carlo simulations a breeze. 
+* You can run an array of the same job, making Monte Carlo simulations a breeze.
 
 ---
 
@@ -56,7 +56,7 @@ https://github.com/dejonghe/aws-batch-example
 
 ### Step 3: Run the env_prep Script.
 To prepare
-You must run a script from within the Github project. This script is to be ran from the base of the repository. If you rename the repository direcotry you will need to edit the [script](./scripts/env_prep.sh), all the variables are at the top. 
+You must run a script from within the Github project. This script is to be ran from the base of the repository. If you rename the repository directory you will need to edit the [script](./scripts/env_prep.sh), all the variables are at the top.
 
 This script performs the following tasks:
 1. Builds and and uploads the lambda code
@@ -64,7 +64,7 @@ This script performs the following tasks:
   * Copies the code from [lambda trigger](./lambda/trigger/) to the temp directory
   * Uses pip to install the requirements to the temp directory
   * Zips up the contents of the temp directory to a package named ./lambda/trigger.zip
-  * Removes the temp directory 
+  * Removes the temp directory
   * Uploads the zip to `s3://{yourBucket}/{release(develop)}/lambda/trigger.zip`
 2. Creates and or Validates ECR Repositories
   * The script will validate you have two ECR Repositories: ['batchpocstart','batchpocprocess']
@@ -85,7 +85,7 @@ The following is an example of running the script. **Note:** You can pass -p pro
 ```
 
 ### Step 4: Create the CloudFormation Stack.
-This step utilizes the [CloudFormation Template](./cloudformation/batch/batch-example.yml) to produce the batch environment and supporting resources and hooks. You can upload this template directly to the AWS CloudFormation Console, or use the following command. The console will provide drop downs for the networking and Ec2 KeyPair parameters. If you use the command line you'll have to look these up yourself to fill out the command line arguments. If you want SSH access to the batch instances, ensure that the VPCCidr parameter is set to the Cidr of your vpc, it's used for the batch instance security group. You must provide IAM capabilities to this CloudFormation stack because we must create an IAM role for the lambda function, the batch instances, and the batch containers. A full description of the CloudFormation stack and what it creates can be found in the [README.md](./cloudformation/batch/README.md)
+This step utilizes the [CloudFormation Template](./cloudformation/batch/batch-example.yml) to produce the batch environment and supporting resources and hooks. You can upload this template directly to the AWS CloudFormation Console, or use the following command. The console will provide drop downs for the networking and Ec2 KeyPair parameters. If you use the command line you'll have to look these up yourself to fill out the command line arguments. If you want SSH access to the batch instances, ensure that the VPCCidr parameter is set to the Cidr of your VPC, it's used for the batch instance security group. You must provide IAM capabilities to this CloudFormation stack because we must create an IAM role for the lambda function, the batch instances, and the batch containers. A full description of the CloudFormation stack and what it creates can be found in the [README.md](./cloudformation/batch/README.md)
 
 
 ```
@@ -93,7 +93,7 @@ aws cloudformation create-stack --template-body file://cloudformation/batch/batc
 
 ```
 
-Wait for the CloudFormation stack to complete and then check in on the Batch Dashboard. 
+Wait for the CloudFormation stack to complete and then check in on the Batch Dashboard.
 
 ### Step 6: Exercise the demo
 #### Upload to S3
@@ -107,21 +107,21 @@ From the Batch Dashboard you should see the Queue, and Compute Environment. You 
 
 1. You'll see a job appear in the submitted state.
 2. It will quickly jump to Pending then to Runnable.
-3. Once the job is runnable there will need to be a instance in the Compute Environment to run the job. 
+3. Once the job is runnable there will need to be a instance in the Compute Environment to run the job.
 4. Note that the current Desired vCPUs for your Compute Environment is initially 0. This means you have 0 instance in your Compute Environment.
-5. As the job becomes runnable Batch will start to launch an EC2 instance for the job to run on. This can take a few minutes. 
-  * To keep a Batch Compute Environment warm so you do not have to wait, up the Minimum vCPUs. 
-6. Once your Compute Environment is online you will see your job move to starting. 
+5. As the job becomes runnable Batch will start to launch an EC2 instance for the job to run on. This can take a few minutes.
+  * To keep a Batch Compute Environment warm so you do not have to wait, up the Minimum vCPUs.
+6. Once your Compute Environment is online you will see your job move to starting.
   * This can take a few moments for the first run because the instance needs to pull down the container image.
-7. Your Job will then move to running for a brief second, and then to Success or Failed. 
+7. Your Job will then move to running for a brief second, and then to Success or Failed.
 8. Whether you job is a Success or Failure, if you click into the link you will be taken to the Jobs Dashboard for that Status.
-9. Click the JobId. You will see detail appear on the right hand side. 
-10. In the detail you will see link to view logs. Click on it to explore. 
-11. If the first job was successful, 5 other jobs will be submitted and move through the different status's. 
+9. Click the JobId. You will see detail appear on the right hand side.
+10. In the detail you will see link to view logs. Click on it to explore.
+11. If the first job was successful, 5 other jobs will be submitted and move through the different status's.
   * Note that when the group of 5 is submitted some stay in pending, and do not immediately go to runnable. This is because those jobs have dependencies.
-12. Now submit a job manually through the Jobs Dashboard. 
+12. Now submit a job manually through the Jobs Dashboard.
   * Play with running jobs different ways.
   * Try submitting an Array.
 13. Find other ways to trigger batch jobs:
-  * The lambda function allows you to integrate with anything that can invoke lambda or sns, though you'll have to edit the permissions.
+  * The lambda function allows you to integrate with anything that can invoke lambda or SNS, though you'll have to edit the permissions.
   * Check out the CloudWatch Events trigger for AWS Batch, to trigger based on CloudWatch Event rules/patterns or a time schedule.
