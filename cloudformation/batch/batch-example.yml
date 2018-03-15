@@ -60,18 +60,9 @@ Resources:
                 - 'lambda.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       Policies:
-        - 
-          PolicyName: 'LambdaBasic'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - 
-                Effect: 'Allow'
-                Action:
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource: !Join [ ':', [ 'arn:aws:logs', !Ref 'AWS::Region', !Ref 'AWS::AccountId', 'log-group:*:*' ] ]
         - 
           PolicyName: 'SubmitBatch'
           PolicyDocument:
@@ -134,29 +125,8 @@ Resources:
                 - 'ec2.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
-      Policies:
-        - 
-          PolicyName: 'ECS'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - 
-                Effect: 'Allow'
-                Action:
-                  - 'ecs:*'
-                  - 'ecr:*'
-                  - 'logs:*'
-                Resource: '*'
-        - 
-          PolicyName: 'Batch'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - 
-                Effect: 'Allow'
-                Action:
-                  - 'batch:*'
-                Resource: '*'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
   BatchInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
