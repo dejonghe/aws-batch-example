@@ -46,7 +46,7 @@ Before you jump head first into AWS Batch you need code for batch to run. AWS ba
 ### Step 1: Create a S3 Bucket.
 You will need a S3 bucket to work out of, we will use this bucket to upload our lambda code zip. Create the bucket with the following CLI command or through the console. Keep in mind that S3 bucket names are globally unique and you will have to come up with a bucket name for yourself.
 ```
-aws s3 mb s3://aws_batch_example_{yourName} (--profile optionalProfile)
+aws s3 mb s3://aws-batch-example-{yourName} (--profile optionalProfile)
 ```
 
 ### Step 2: Clone the example Github project.
@@ -81,7 +81,7 @@ This script performs the following tasks:
 
 The following is an example of running the script. **Note:** You can pass -p profile, and -r release (Your aws-cli profile's default regions is used)
 ```
-./scripts/env_prep.sh -b aws_batch_example_{yourName} (-p optionalProfile -r optionalRelease)
+./scripts/env_prep.sh -b aws-batch-example-{yourName} (-p optionalProfile -r optionalRelease)
 ```
 
 ### Step 4: Create the CloudFormation Stack.
@@ -89,7 +89,7 @@ This step utilizes the [CloudFormation Template](./cloudformation/batch/batch-ex
 
 
 ```
-aws cloudformation create-stack --template-body file://cloudformation/batch/batch-example.yml --stack-name batch-example --parameters '[{"ParameterKey":"CloudToolsBucket","ParameterValue":"aws_batch_example_{yourName}"},{"ParameterKey":"VPCCidr","ParameterValue":"10.0.0.0/16"},{"ParameterKey":"VPC","ParameterValue":"vpc-xxxxxxxx"},{"ParameterKey":"Subnets","ParameterValue":"subnet-xxxxxxxx,subnet-xxxxxxxx"},{"ParameterKey":"Ec2KeyPair","ParameterValue":"{yourKeyPairName}"}]' --capabilities CAPABILITY_NAMED_IAM (--profile optionalProfile)
+aws cloudformation create-stack --template-body file://cloudformation/batch/batch-example.yml --stack-name batch-example --parameters '[{"ParameterKey":"CloudToolsBucket","ParameterValue":"aws-batch-example-{yourName}"},{"ParameterKey":"VPCCidr","ParameterValue":"10.0.0.0/16"},{"ParameterKey":"VPC","ParameterValue":"vpc-xxxxxxxx"},{"ParameterKey":"Subnets","ParameterValue":"subnet-xxxxxxxx,subnet-xxxxxxxx"},{"ParameterKey":"Ec2KeyPair","ParameterValue":"{yourKeyPairName}"}]' --capabilities CAPABILITY_NAMED_IAM (--profile optionalProfile)
 
 ```
 
