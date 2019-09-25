@@ -31,9 +31,9 @@ Parameters:
     Type: List<AWS::EC2::Subnet::Id>
     Description: 'List of Subnets to boot into'
   AMI:
-    Type: AWS::EC2::Image::Id
-    Description: 'AMI to use for Compute Environment'
-    Default: ami-cad827b7
+    Description: ECS Optimized AMI ID
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
   Ec2KeyPair:
     Type: AWS::EC2::KeyPair::KeyName
     Description: 'Ec2KeyPair to use for Compute Environment'
