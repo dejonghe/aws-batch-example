@@ -191,9 +191,7 @@ Resources:
         MaxvCpus: 24
         SecurityGroupIds: 
           - !Ref BatchSecGroup
-        Subnets: 
-          - !Select [ '0', !Ref Subnets ]
-          - !Select [ '1', !Ref Subnets ]
+        Subnets: !Ref Subnets
         Type: Ec2
         MinvCpus: 0
         ImageId: !Ref AMI
