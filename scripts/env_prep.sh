@@ -139,7 +139,10 @@ setup_ecr ${proc_repo_name}
 
 
 # Get docker credentials for the repositories
-aws ecr get-login --no-include-email --profile ${PROFILE} | bash
+# outdated command from v1
+# aws ecr get-login --no-include-email --profile ${PROFILE} | bash
+# This command is supported using the latest version of AWS CLI version 2 or in v1.17.10 or later of AWS CLI version 1
+aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
 # Build and push docker images
 build_docker ${start_docker_path} ${start_repo_name} ${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
